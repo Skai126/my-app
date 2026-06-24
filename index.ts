@@ -27,9 +27,25 @@ app.get("/", async (req, res) => {
 // ユーザー追加：フォームから送られた名前を保存する
 app.post("/users", async (req, res) => {
   const name = req.body.name;
+  const ageInput = req.body.age;
+
+  // 年齢を数字に変換する
+  const age =
+    ageInput !== undefined && ageInput !== "" ? Number(ageInput) : null;
+
+  // --- ここからが足りなかった「保存の命令」じゃ！ ---
   if (name) {
-    await prisma.user.create({ data: { name } });
+    try {
+      await prisma.user.create({
+        data: { name, age },
+      });
+      console.log("保存成功！:", { name, age });
+    } catch (error) {
+      console.error("保存失敗:", error);
+    }
   }
+  // ----------------------------------------------
+
   res.redirect("/");
 });
 
