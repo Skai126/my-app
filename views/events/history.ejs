@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"><title>割り勘履歴</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>割り勘の履歴</h1>
+  <a href="/members">メンバー管理へ</a> | <a href="/events/new">新しい計算へ</a>
+  <hr>
+  <% events.forEach(event => { %>
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+      <h3>開催日: <%= event.eventDate.toLocaleString('ja-JP') %></h3>
+      <p>総額: <%= event.totalAmount %> 円 / 幹事の取り分: <strong><%= event.organizerProfit %> 円</strong></p>
+      <ul>
+        <% event.attendances.forEach(att => { %>
+          <li><%= att.member.name %>: <%= att.amountToPay %> 円</li>
+        <% }) %>
+      </ul>
+    </div>
+  <% }) %>
+</body>
+</html>

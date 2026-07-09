@@ -1,20 +1,51 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id   Int    @id @default(autoincrement())
-  name String
-  age  Int?
+// グループ情報
+model Group {
+  id      Int      @id @default(autoincrement())
+  name    String   // グループ名（例：テニス部、仲良しグループ）
+  members Member[]
 }
 
+model Member {
+  id              Int               @id @default(autoincrement())
+  name            String
+  roleClass       String
+  isDrinker       Boolean           @default(true)
+  // --- グループ紐付けを追加 ---
+  groupId         Int?
+  group           Group?            @relation(fields: [groupId], references: [id])
+  // -------------------------
+  attendances     EventAttendance[]
+  organizedEvents Event[]           @relation("OrganizedEvents")
+}
+
+
+// 飲み会イベント情報
+model Event {
+  id              Int               @id @default(autoincrement())
+  eventDate       DateTime          @default(now())
+  totalAmount     Int
+  ratioSettings   String            // JSON形式の文字列
+  organizerProfit Int
+  organizerId     Int?
+  organizer       Member?           @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  attendances     EventAttendance[]
+}
+
+// 誰がいくら払うかの記録
+model EventAttendance {
+  id          Int    @id @default(autoincrement())
+  memberId    Int
+  eventId     Int
+  amountToPay Int
+  member      Member @relation(fields: [memberId], references: [id])
+  event       Event  @relation(fields: [eventId], references: [id])
+}

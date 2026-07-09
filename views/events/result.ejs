@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>計算結果</title>
+  <link rel="stylesheet" href="/style.css">
+<body>
+
+  <div class="panel">
+    <h1>🎉 計算が完了しました</h1>
+
+    <% 
+      // 役職ラベルのマッピング
+      const ROLE_LABELS = {
+        CEO: "社長",
+        MANAGER: "部長",
+        STAFF: "正社員",
+        PART_TIMER: "アルバイト"
+      };
+
+      // 幹事の利益・持出しの判定
+      const profit = event.organizerProfit;
+      const isPositive = profit >= 0;
+      const profitText = isPositive ? "幹事の受取超過額 (利益)" : "幹事の持出し額 (不足分)";
+      const profitClass = isPositive ? "profit-positive" : "profit-negative";
+    %>
+
+    <div class="header-info">
+      <div><strong>飲み会総額:</strong> <%= event.totalAmount.toLocaleString() %> 円</div>
+      <div><strong>幹事:</strong> <%= event.organizer ? event.organizer.name : "不明" %></div>
+      <% if (event.ratioSettings) { %>
+        <div class="muted">適用した比率: <%= event.ratioSettings %></div>
+      <% } %>
+    </div>
+
+    <h2><%= profitText %></h2>
+    <div class="<%- profitClass %>">
+      <%= isPositive ? "" : "-" %><%= Math.abs(profit).toLocaleString() %> 円
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>名前</th>
+          <th>役職</th>
+          <th style="text-align: right;">支払額</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% event.attendances.forEach(att => { %>
+          <% const role = att.member.role_class || att.member.roleClass; %>
+          <tr>
+            <td>
+              <%= att.member.name %>
+              <% if (event.organizerId === att.member.id) { %>
+                <span class="muted">(幹事)</span>
+              <% } %>
+            </td>
+            <td><%= ROLE_LABELS[role] || role %></td>
+            <td class="amount-cell"><%= att.amountToPay.toLocaleString() %> 円</td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <div class="actions">
+      <a href="/events/new" class="btn btn-primary">新しく計算する</a>
+      <a href="/events/history" class="btn">履歴一覧を見る</a>
+      <a href="/members" class="btn">メンバー管理</a>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>新しい割り勘</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>新しい割り勘を計算</h1>
+  <a href="/members">メンバーを管理する</a> | <a href="/events/history">履歴を見る</a>
+  <hr>
+  <form action="/events" method="post">
+    
+    <div class="field">
+      <label>
+        飲み会総額: 
+        <input type="number" name="total_amount" id="total_amount" required> 円
+      </label>
+    </div>
+    <hr>
+
+    <h3>1. 比率を設定</h3>
+    <div class="field">
+      <label>
+        比率: <br>
+        社長: <input type="number" id="ratio_president" value="1.5" step="0.01" style="width:60px">
+        部長: <input type="number" id="ratio_manager" value="1.3" step="0.01" style="width:60px">
+        正社員: <input type="number" id="ratio_regular" value="1.1" step="0.01" style="width:60px">
+        アルバイト: <input type="number" id="ratio_parttimer" value="1.0" step="0.01" style="width:60px">
+      </label>
+      <br>
+      <button type="button" onclick="recommend()" style="margin-top: 5px;">参加人数・総額から推奨</button>
+    </div>
+    <hr>
+
+    <h3>2. 丸め処理</h3>
+    <div class="field">
+      <select name="round_mode">
+        <option value="floor">切り捨て</option>
+        <option value="ceil" selected>切り上げ</option>
+        <option value="round">四捨五入</option>
+      </select>
+      <div class="muted">※支払合計が総額未満になる場合は、100円単位で自動調整します。</div>
+    </div>
+    <hr>
+
+    <h3>3. 幹事を選ぶ</h3>
+    <div class="field">
+      <select name="organizer_member_id" required>
+        <option value="">-- 幹事を選択してください --</option>
+        <% members.forEach(m => { %> 
+          <option value="<%= m.id %>"><%= m.name %></option> 
+        <% }) %>
+      </select>
+    </div>
+    <hr>
+
+    <h3>4. 参加者を選ぶ</h3>
+    <div class="field">
+      <% 
+        const ROLE_LABELS = {
+          CEO: "社長",
+          MANAGER: "部長",
+          STAFF: "正社員",
+          PART_TIMER: "アルバイト"
+        };
+      %>
+      <% members.forEach(m => { %>
+        <% const role = m.role_class || m.roleClass; %> <label style="display:block; margin-bottom: 5px;">
+          <input type="checkbox" name="participants" value="<%= m.id %>" class="mb-cb" data-role="<%= role %>">
+          <%= m.name %> (<%= ROLE_LABELS[role] || role %>)
+        </label>
+      <% }) %>
+    </div>
+    <hr>
+    
+    <button type="submit" style="padding:10px 20px; font-weight: bold;">計算実行</button>
+    <input type="hidden" name="ratio_settings" id="hidden_ratios">
+  </form>
+
+  <script>
+  // 送信直前に、各入力欄の数字を「1.5:1.3:1.1:1.0」の形にまとめて隠しフィールドにセットする
+  document.querySelector('form').onsubmit = function() {
+    const r1 = document.getElementById('ratio_president').value;
+    const r2 = document.getElementById('ratio_manager').value;
+    const r3 = document.getElementById('ratio_regular').value;
+    const r4 = document.getElementById('ratio_parttimer').value;
+    
+    // バックエンドが期待している「コロン区切り」の形式に変換してセットするぞ
+    document.getElementById('hidden_ratios').value = `${r1}:${r2}:${r3}:${r4}`;
+  };
+
+  // 高度な推奨計算ロジック（各入力欄に個別に反映させる版）
+  function recommend() {
+    const checkboxes = document.querySelectorAll('.mb-cb:checked');
+    if (checkboxes.length === 0) {
+      alert("参加者を選んでから推奨ボタンを押してくれ！");
+      return;
+    }
+
+    const participantCount = checkboxes.length;
+    const totalInput = document.getElementById('total_amount').value;
+    const total = Number(totalInput) || (5000 * participantCount); // 未入力時は仮で一人5000円計算
+    
+    // --- React版に合わせた高度な推奨計算ロジック ---
+    const averageAmount = total / participantCount;
+    const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
+    const amountPressure = clamp((averageAmount - 4000) / 16000, 0, 1);
+    const participantAdjustment = participantCount <= 3 ? 0.85 : 1;
+    const spread = (0.14 + amountPressure * 0.12) * participantAdjustment;
+
+    // 比率の計算（小数第2位まで）
+    const ratioCEO = (1 + spread).toFixed(2);
+    const ratioMgr = (1 + spread * 0.45).toFixed(2);
+    const ratioStaff = "1.00"; // 基準
+    const ratioPt = Math.max(0.78, 1 - spread * 0.85).toFixed(2);
+
+    // --- ここが重要！ 各入力欄に計算結果をセットするのじゃ ---
+    // parseFloat で末尾の不要な 0 を消してスッキリさせておるぞ
+    document.getElementById('ratio_president').value = parseFloat(ratioCEO);
+    document.getElementById('ratio_manager').value   = parseFloat(ratioMgr);
+    document.getElementById('ratio_regular').value   = parseFloat(ratioStaff);
+    document.getElementById('ratio_parttimer').value = parseFloat(ratioPt);
+    
+    const newRatioText = `${parseFloat(ratioCEO)} : ${parseFloat(ratioMgr)} : 1.0 : ${parseFloat(ratioPt)}`;
+    alert(`【サークル向け推奨】\n人数と金額から最適な比率を算出したぞ！\n設定: ${newRatioText}`);
+  }
+</script>
+
+</body>
+</html>

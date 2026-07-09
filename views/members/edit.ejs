@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8"><title>メンバー編集</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>メンバー情報の編集</h1>
+  <form action="/members/<%= member.id %>/update" method="post">
+    <div>
+      名前: <input type="text" name="name" value="<%= member.name %>" required>
+    </div>
+
+    <div>
+      役職: 
+      <select name="roleClass">
+        <% ["社長", "部長", "社員", "アルバイト"].forEach(role => { %>
+          <option value="<%= role %>" <%= member.roleClass === role ? 'selected' : '' %>><%= role %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      グループ: 
+      <select name="groupId">
+        <option value="">所属なし</option>
+        <% groups.forEach(g => { %>
+          <option value="<%= g.id %>" <%= member.groupId === g.id ? 'selected' : '' %>><%= g.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <label>
+        <input type="checkbox" name="isDrinker" <%= member.isDrinker ? 'checked' : '' %>> お酒を飲む
+      </label>
+    </div>
+
+    <hr>
+    <button type="submit">更新する</button>
+    <a href="/members">キャンセル</a>
+  </form>
+</body>
+</html>
+

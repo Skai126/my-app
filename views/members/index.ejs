@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>メンバー管理</title>
+  <link rel="stylesheet" href="/style.css">
+
+</head>
+<body>
+  <h1>メンバー管理</h1>
+  <a href="/events/new">新しい割り勘を計算する</a> | <a href="/events/history">履歴を見る</a>
+  <hr>
+
+  <!-- 1. まずはグループを作る場所じゃ -->
+  <div style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;">
+    <h3>Step 1: グループを新しく作る</h3>
+    <form action="/members/groups" method="post">
+      <input type="text" name="groupName" placeholder="グループ名（例：テニス部）" required>
+      <button type="submit">グループ作成</button>
+    </form>
+  </div>
+
+  <hr>
+
+  <!-- 2. 次にメンバーを登録する場所じゃ。ここにすべての項目を入れるぞ！ -->
+  <div style="background: #eef9ff; padding: 15px; border: 1px solid #bde0ff; border-radius: 8px; margin-bottom: 20px;">
+    <h3>Step 2: メンバーを登録する</h3>
+    <form action="/members" method="post">
+      <div style="margin-bottom: 10px;">
+        <label>名前: <input type="text" name="name" required></label>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label>役職: 
+          <select name="roleClass">
+            <option value="社長">社長</option>
+            <option value="部長">部長</option>
+            <option value="社員">社員</option>
+            <option value="アルバイト">アルバイト</option>
+          </select>
+        </label>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label>グループ: 
+          <select name="groupId">
+            <option value="">所属なし</option>
+            <% groups.forEach(g => { %>
+              <option value="<%= g.id %>"><%= g.name %></option>
+            <% }) %>
+          </select>
+        </label>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label><input type="checkbox" name="isDrinker" checked> お酒を飲む</label>
+      </div>
+
+      <button type="submit" style="padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 4px;">メンバー登録</button>
+    </form>
+  </div>
+
+  <hr>
+
+  <!-- 3. メンバー一覧（削除ボタン付き） -->
+  <h2>メンバー一覧</h2>
+  <!-- views/members/index.ejs の一覧表の上あたりに追加じゃ -->
+<div style="margin-bottom: 10px;">
+  並べ替え：
+  <a href="/members?sort=name">50音順</a> | 
+  <a href="/members?sort=role">役職順</a> | 
+  <a href="/members?sort=group">グループ順</a> | 
+  <a href="/members">元に戻す</a>
+</div>
+
+<table border="1">
+  <!-- ... 表の中身 ... -->
+</table>
+
+  <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+    <thead style="background: #eee;">
+      <tr>
+        <th>名前</th>
+        <th>グループ</th>
+        <th>役職</th>
+        <th>お酒</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% members.forEach(m => { %>
+        <tr>
+          <td><%= m.name %></td>
+          <td><%= m.group ? m.group.name : "未所属" %></td>
+          <td><%= m.roleClass %></td>
+          <td><%= m.isDrinker ? "○" : "×" %></td>
+          <td>
+            <a href="/members/<%= m.id %>/edit" style="margin-right: 10px;">編集</a>
+            <form action="/members/<%= m.id %>/delete" method="post" onsubmit="return confirm('本当に削除してもよいかな？')" style="display:inline;">
+              <button type="submit" style="color: red; cursor: pointer;">削除</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+</body>
+</html>
