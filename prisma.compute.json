@@ -1,0 +1,13 @@
+{
+  "region": "ap-northeast-1",
+  "app": {
+    "name": "my-app",
+    "framework": "bun",
+    "entry": "index.ts",
+    "httpPort": 3000,
+    "build": {
+      "command": null,
+      "outputDirectory": "."
+    }
+  }
+}
