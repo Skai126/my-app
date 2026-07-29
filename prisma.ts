@@ -1,7 +1,11 @@
-import { Pool } from "pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "./generated/prisma/client/index.js";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// 環境変数からURLを読み込んでPostgreSQLに接続
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
 const adapter = new PrismaPg(pool);
-export const prisma = new PrismaClient({ adapter, log: ["query"] });
+const prisma = new PrismaClient({ adapter }); // adapterを渡すように変更
